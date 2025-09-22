@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>政策活动频率地图 — 年度数据可视化</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    :root {
+      --bg:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --brand:#ff6b35;
+      --panel:#f8fafc;
+      --border:#e5e7eb;
+      --accent:#10b981;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      height:100%;
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    header {
+      border-bottom:1px solid var(--border);
+      background:#fff;
+      position:sticky;
+      top:0;
+      z-index:20;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 20px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0;
+      color: var(--text);
+      font-weight: 700;
+    }
+    .sub {
+      color:var(--muted);
+      margin-top: 8px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .panel {
+      border:1px solid var(--border);
+      background:var(--panel);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .controls {
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items:center;
+    }
+    .slider-wrap {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    input[type=range] {
+      width: 300px;
+      max-width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: #e5e7eb;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--brand);
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--brand);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .year-badge {
+      background:linear-gradient(135deg, var(--brand), #ff8f65);
+      color: white;
+      border: none;
+      padding:8px 16px;
+      border-radius: 12px;
+      font-weight:700;
+      font-size: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #map {
+      width:100%;
+      height: 70vh;
+      border-radius: 16px;
+      border:1px solid var(--border);
+      margin-top: 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .legend {
+      font-size:14px;
+      color:#374151;
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(248, 250, 252, 0.8);
+      border-radius: 8px;
+      border-left: 4px solid var(--brand);
+    }
+    .leaflet-tooltip {
+      background:#fff !important;
+      color:#111 !important;
+      border:1px solid var(--border) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+      font-weight: 500;
+    }
+    .btn {
+      border:1px solid var(--border);
+      background:#fff;
+      color:#111;
+      padding:10px 16px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: var(--panel);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .btn:disabled {
+      opacity:.5;
+      cursor:not-allowed;
+    }
+    .actions {
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .muted {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    pre#error {
+      background:#fee2e2;
+      color:#991b1b;
+      padding:12px;
+      border-radius:12px;
+      display:none;
+      white-space:pre-wrap;
+      border-left: 4px solid #ef4444;
+    }
+    .status {
+      font-size:13px;
+      color:#6b7280;
+      background: rgba(107, 114, 128, 0.1);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .stats-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--brand);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>🌍 政策活动频率地图</h1>
+      <div class="sub">拖动滑块选择年份，圆圈标记表示该年度有政策活动的国家，圆圈大小表示活动频率</div>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <div class="panel">
+        <div class="controls">
+          <div class="slider-wrap">
+            <span class="muted">年份</span>
+            <input id="yearSlider" type="range" min="1962" max="1992" step="1" value="1962" />
+            <span id="yearBadge" class="year-badge">1962</span>
+            <span id="status" class="status">加载中...</span>
+          </div>
+          <div class="actions">
+            <button id="dlDataBtn" class="btn">📥 下载当年数据</button>
+            <button id="resetBtn" class="btn">🏠 重置视图</button>
+          </div>
+        </div>
+
+        <div class="stats-panel">
+          <div class="stat-card">
+            <div id="totalCountries" class="stat-number">-</div>
+            <div class="stat-label">活跃国家</div>
+          </div>
+          <div class="stat-card">
+            <div id="totalEvents" class="stat-number">-</div>
+            <div class="stat-label">政策事件</div>
+          </div>
+          <div class="stat-card">
+            <div id="avgFrequency" class="stat-number">-</div>
+            <div class="stat-label">平均频率</div>
+          </div>
+          <div class="stat-card">
+            <div id="maxFrequency" class="stat-number">-</div>
+            <div class="stat-label">最高频率</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="map"></div>
+      <div class="legend">
+        💡 <strong>使用说明：</strong> 圆圈位于国家中心，颜色从浅橙色到深红色表示政策活动频率从低到高。鼠标悬停查看详细信息。支持缩放和拖拽操作。
+      </div>
+      <pre id="error"></pre>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+  // 嵌入的数据
+  const ROWS = [
+    {Country: "Honduras", "ISO-3": "HND", Status: "legislation", Date: "Nov-62", Year: 1962, Frequency: 1},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "legislation", Date: "Dec-82", Year: 1982, Frequency: 15},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "announcement", Date: "Mar-85", Year: 1985, Frequency: 16},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "announcement", Date: "Sep-86", Year: 1986, Frequency: 17},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "announcement", Date: "Mar-87", Year: 1987, Frequency: 18},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "announcement", Date: "Sep-88", Year: 1988, Frequency: 19},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "announcement", Date: "Mar-89", Year: 1989, Frequency: 20},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "announcement", Date: "Jun-89", Year: 1989, Frequency: 21},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "announcement", Date: "Jun-90", Year: 1990, Frequency: 22},
+    {Country: "Mexico", "ISO-3": "MEX", Status: "legislation", Date: "Mar-92", Year: 1992, Frequency: 23}
+  ];
+
+  // 内嵌国家坐标数据（避免网络请求）
+  const COUNTRY_CENTROIDS = {
+    'Afghanistan': [33.93911, 67.709953],
+    'Albania': [41.153332, 20.168331],
+    'Algeria': [28.033886, 1.659626],
+    'Argentina': [-38.416097, -63.616672],
+    'Armenia': [40.069099, 45.038189],
+    'Australia': [-25.274398, 133.775136],
+    'Austria': [47.516231, 14.550072],
+    'Azerbaijan': [40.143105, 47.576927],
+    'Bangladesh': [23.684994, 90.356331],
+    'Belarus': [53.709807, 27.953389],
+    'Belgium': [50.503887, 4.469936],
+    'Bolivia': [-16.290154, -63.588653],
+    'Bosnia and Herzegovina': [43.915886, 17.679076],
+    'Brazil': [-14.235004, -51.92528],
+    'Bulgaria': [42.733883, 25.48583],
+    'Cambodia': [12.565679, 104.990963],
+    'Canada': [56.130366, -106.346771],
+    'Chile': [-35.675147, -71.542969],
+    'China': [35.86166, 104.195397],
+    'Colombia': [4.570868, -74.297333],
+    'Costa Rica': [9.748917, -83.753428],
+    'Croatia': [45.1, 15.2],
+    'Czech Republic': [49.817492, 15.472962],
+    'Denmark': [56.26392, 9.501785],
+    'Ecuador': [-1.831239, -78.183406],
+    'Egypt': [26.820553, 30.802498],
+    'Estonia': [58.595272, 25.013607],
+    'Finland': [61.92411, 25.748151],
+    'France': [46.227638, 2.213749],
+    'Germany': [51.165691, 10.451526],
+    'Ghana': [7.946527, -1.023194],
+    'Greece': [39.074208, 21.824312],
+    'Guatemala': [15.783471, -90.230759],
+    'Honduras': [15.199999, -86.241905],
+    'Hungary': [47.162494, 19.503304],
+    'Iceland': [64.963051, -19.020835],
+    'India': [20.593684, 78.96288],
+    'Indonesia': [-0.789275, 113.921327],
+    'Iran': [32.427908, 53.688046],
+    'Iraq': [33.223191, 43.679291],
+    'Ireland': [53.41291, -8.24389],
+    'Israel': [31.046051, 34.851612],
+    'Italy': [41.87194, 12.56738],
+    'Japan': [36.204824, 138.252924],
+    'Jordan': [30.585164, 36.238414],
+    'Kazakhstan': [48.019573, 66.923684],
+    'Kenya': [-0.023559, 37.906193],
+    'South Korea': [35.907757, 127.766922],
+    'Latvia': [56.879635, 24.603189],
+    'Lebanon': [33.854721, 35.862285],
+    'Lithuania': [55.169438, 23.881275],
+    'Malaysia': [4.210484, 101.975766],
+    'Mexico': [23.634501, -102.552784],
+    'Morocco': [31.791702, -7.09262],
+    'Netherlands': [52.132633, 5.291266],
+    'New Zealand': [-40.900557, 174.885971],
+    'Norway': [60.472024, 8.468946],
+    'Pakistan': [30.375321, 69.345116],
+    'Panama': [8.537981, -80.782127],
+    'Paraguay': [-23.442503, -58.443832],
+    'Peru': [-9.189967, -75.015152],
+    'Philippines': [12.879721, 121.774017],
+    'Poland': [51.919438, 19.145136],
+    'Portugal': [39.399872, -8.224454],
+    'Romania': [45.943161, 24.96676],
+    'Russia': [61.52401, 105.318756],
+    'Saudi Arabia': [23.885942, 45.079162],
+    'Serbia': [44.016521, 21.005859],
+    'Slovakia': [48.669026, 19.699024],
+    'Slovenia': [46.151241, 14.995463],
+    'South Africa': [-30.559482, 22.937506],
+    'Spain': [40.463667, -3.74922],
+    'Sweden': [60.128161, 18.643501],
+    'Switzerland': [46.818188, 8.227512],
+    'Thailand': [15.870032, 100.992541],
+    'Turkey': [38.963745, 35.243322],
+    'Ukraine': [48.379433, 31.16558],
+    'United Kingdom': [55.378051, -3.435973],
+    'United States': [37.09024, -95.712891],
+    'Uruguay': [-32.522779, -55.765835],
+    'Venezuela': [6.42375, -66.58973],
+    'Vietnam': [14.058324, 108.277199]
+  };
+
+  let byYear = new Map();
+  let years = [];
+  let selectedYear = 1962;
+  let map, markersLayer;
+  const errBox = document.getElementById('error');
+  const statusEl = document.getElementById('status');
+
+  function showError(e) {
+    errBox.style.display = 'block';
+    errBox.textContent = String(e && e.stack ? e.stack : e);
+    console.error(e);
+  }
+
+  // 国家名称规范化
+  function canon(s) {
+    return String(s || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\u2019']/g, "'")
+      .toLowerCase()
+      .trim();
+  }
+
+  // 国家名称别名映射
+  const NAME_ALIASES = new Map([
+    ['usa', 'United States'],
+    ['us', 'United States'],
+    ['united states of america', 'United States'],
+    ['uk', 'United Kingdom'],
+    ['britain', 'United Kingdom'],
+    ['russia', 'Russia'],
+    ['russian federation', 'Russia'],
+    ['korea', 'South Korea'],
+    ['south korea', 'South Korea'],
+    ['viet nam', 'Vietnam'],
+    ['méxico', 'Mexico'],
+    ['brasil', 'Brazil']
+  ]);
+
+  function findCountryCoords(countryName) {
+    if (!countryName) return null;
+
+    // 直接匹配
+    if (COUNTRY_CENTROIDS[countryName]) {
+      return COUNTRY_CENTROIDS[countryName];
+    }
+
+    // 规范化匹配
+    const canonical = canon(countryName);
+    for (const [key, coords] of Object.entries(COUNTRY_CENTROIDS)) {
+      if (canon(key) === canonical) {
+        return coords;
+      }
+    }
+
+    // 别名匹配
+    const alias = NAME_ALIASES.get(canonical);
+    if (alias && COUNTRY_CENTROIDS[alias]) {
+      return COUNTRY_CENTROIDS[alias];
+    }
+
+    return null;
+  }
+
+  function rebuildYearIndex(rows) {
+    const clean = (rows || []).filter(r => r.Country && r.Year && r.Frequency);
+    byYear = clean.reduce((m, r) => {
+      const y = +r.Year;
+      const name = String(r.Country).trim();
+      const freq = +r.Frequency;
+
+      if (!m.has(y)) m.set(y, new Map());
+
+      // 同一国家同一年份取最大频率
+      const existing = m.get(y).get(name) || 0;
+      m.get(y).set(name, Math.max(existing, freq));
+
+      return m;
+    }, new Map());
+
+    years = Array.from(byYear.keys()).sort((a,b)=>a-b);
+    const slider = document.getElementById('yearSlider');
+    const badge = document.getElementById('yearBadge');
+
+    selectedYear = years.length ? years[0] : 1962;
+    slider.min = years.length ? years[0] : 1962;
+    slider.max = years.length ? years[years.length-1] : 1992;
+    slider.value = selectedYear;
+    badge.textContent = selectedYear;
+
+    updateStats();
+  }
+
+  function updateStats() {
+    const yearData = byYear.get(selectedYear) || new Map();
+    const frequencies = Array.from(yearData.values());
+
+    document.getElementById('totalCountries').textContent = yearData.size;
+    document.getElementById('totalEvents').textContent = frequencies.length;
+    document.getElementById('avgFrequency').textContent =
+      frequencies.length > 0 ? Math.round(frequencies.reduce((a,b) => a+b, 0) / frequencies.length) : 0;
+    document.getElementById('maxFrequency').textContent =
+      frequencies.length > 0 ? Math.max(...frequencies) : 0;
+  }
+
+  // 构建年份索引
+  (function initData() {
+    try {
+      rebuildYearIndex(ROWS);
+      statusEl.textContent = `数据已加载 (${ROWS.length} 条记录)`;
+    } catch(e) {
+      showError(e);
+    }
+  })();
+
+  document.addEventListener('DOMContentLoaded', initMap);
+
+  function initMap() {
+    try {
+      // 创建地图
+      map = L.map('map', { worldCopyJump: true });
+
+      // 使用OpenStreetMap瓦片
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 10,
+        minZoom: 2,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      map.setView([20, 0], 2);
+      markersLayer = L.layerGroup().addTo(map);
+
+      // 直接渲染气泡，不需要外部API
+      renderBubbles();
+      statusEl.textContent = `地图已就绪 (内置 ${Object.keys(COUNTRY_CENTROIDS).length} 个国家坐标)`;
+
+    } catch(e) {
+      showError(e);
+      statusEl.textContent = '地图初始化失败';
+    }
+  }
+
+  function renderBubbles() {
+    if (!markersLayer) return;
+    markersLayer.clearLayers();
+
+    const yearData = byYear.get(selectedYear) || new Map();
+    const unmatched = [];
+    let placed = 0;
+
+    yearData.forEach((frequency, countryName) => {
+      const coords = findCountryCoords(countryName);
+
+      if (!coords) {
+        unmatched.push(countryName);
+        return;
+      }
+
+      // 根据频率计算圆圈大小和颜色
+      const maxFreq = Math.max(...Array.from(yearData.values()));
+      const minFreq = Math.min(...Array.from(yearData.values()));
+      const normalizedFreq = maxFreq === minFreq ? 1 : (frequency - minFreq) / (maxFreq - minFreq);
+
+      const radius = Math.max(8, 6 + normalizedFreq * 20); // 8-26px
+
+      // 颜色渐变：浅橙 -> 深红
+      const colors = [
+        '#fff7ed', '#ffedd5', '#fed7aa', '#fdba74',
+        '#fb923c', '#f97316', '#ea580c', '#c2410c', '#9a3412'
+      ];
+      const colorIndex = Math.floor(normalizedFreq * (colors.length - 1));
+      const fillColor = colors[colorIndex];
+
+      const circle = L.circleMarker(coords, {
+        radius: radius,
+        weight: 2,
+        color: '#c2410c',
+        fillColor: fillColor,
+        fillOpacity: 0.8,
+        opacity: 1
+      }).bindTooltip(
+        `<div style="text-align: center; padding: 4px;">
+          <div style="font-weight: bold; font-size: 14px; color: #111;">${countryName}</div>
+          <div style="color: #666; font-size: 12px; margin-top: 2px;">
+            ${selectedYear}年政策频率: <span style="color: #ea580c; font-weight: bold;">${frequency}</span>
+          </div>
+        </div>`,
+        {
+          permanent: false,
+          direction: 'top',
+          className: 'custom-tooltip'
+        }
+      );
+
+      markersLayer.addLayer(circle);
+      placed++;
+    });
+
+    statusEl.textContent = `显示: ${placed} 个国家  ·  未匹配: ${unmatched.length} 个`;
+    if (unmatched.length) {
+      console.warn('未找到坐标的国家:', unmatched);
+    }
+
+    updateStats();
+  }
+
+  // 滑块交互
+  const sliderEl = document.getElementById('yearSlider');
+  const badgeEl = document.getElementById('yearBadge');
+
+  sliderEl.addEventListener('input', (e) => {
+    selectedYear = +e.target.value;
+    badgeEl.textContent = selectedYear;
+    renderBubbles();
+  });
+
+  // 下载当前年份数据
+  document.getElementById('dlDataBtn').addEventListener('click', () => {
+    const yearData = byYear.get(selectedYear) || new Map();
+    const rows = Array.from(yearData.entries()).map(([country, freq]) => `${country},${selectedYear},${freq}`);
+    const csv = 'Country,Year,Frequency\n' + rows.join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `policy-data_${selectedYear}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // 重置地图视图
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    map.setView([20, 0], 2);
+  });
+
+  </script>
+</body>
+</html>
