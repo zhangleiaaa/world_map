@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>政策活动频率地图 — 年度数据可视化</title>
+  <title>Global Pension Reform Database 1952 – Present</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <style>
     :root {
-      --bg:#ffffff;
+      --bg:#f5f5f5;
       --text:#111827;
       --muted:#6b7280;
-      --brand:#ff6b35;
-      --panel:#f8fafc;
+      --brand:#3b82f6;
+      --panel:#ffffff;
       --border:#e5e7eb;
-      --accent:#10b981;
     }
     * { box-sizing: border-box; }
     html, body {
@@ -24,22 +23,22 @@
       color:var(--text);
     }
     header {
-      border-bottom:1px solid var(--border);
+      border-bottom:2px solid var(--border);
       background:#fff;
       position:sticky;
       top:0;
       z-index:20;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 16px 20px;
+      padding: 20px 24px;
     }
     h1 {
-      font-size: 28px;
+      font-size: 32px;
       margin: 0;
-      color: var(--text);
+      color: var(--brand);
       font-weight: 700;
     }
     .sub {
@@ -51,75 +50,78 @@
     .panel {
       border:1px solid var(--border);
       background:var(--panel);
-      border-radius: 16px;
-      padding: 16px;
-      margin-top: 16px;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .controls {
       display:grid;
       grid-template-columns: 1fr auto;
-      gap: 16px;
+      gap: 20px;
       align-items:center;
     }
     .slider-wrap {
       display:flex;
       align-items:center;
-      gap:12px;
+      gap:16px;
       flex-wrap:wrap;
     }
     input[type=range] {
-      width: 300px;
+      width: 400px;
       max-width: 100%;
-      height: 8px;
-      border-radius: 4px;
-      background: #e5e7eb;
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to right, #dbeafe, #3b82f6);
       outline: none;
       -webkit-appearance: none;
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--brand);
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.5);
+      border: 3px solid white;
     }
     input[type=range]::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--brand);
       cursor: pointer;
-      border: none;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.5);
     }
     .date-badge {
-      background:linear-gradient(135deg, var(--brand), #ff8f65);
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
       color: white;
       border: none;
-      padding:8px 16px;
-      border-radius: 12px;
+      padding:10px 20px;
+      border-radius: 8px;
       font-weight:700;
-      font-size: 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 18px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      min-width: 140px;
+      text-align: center;
     }
     #map {
       width:100%;
-      height: 70vh;
-      border-radius: 16px;
+      height: 75vh;
+      border-radius: 12px;
       border:1px solid var(--border);
-      margin-top: 16px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     .legend {
       font-size:14px;
       color:#374151;
-      margin-top: 12px;
-      padding: 12px;
-      background: rgba(248, 250, 252, 0.8);
+      margin-top: 16px;
+      padding: 16px;
+      background: white;
       border-radius: 8px;
       border-left: 4px solid var(--brand);
     }
@@ -128,27 +130,27 @@
       color:#111 !important;
       border:1px solid var(--border) !important;
       border-radius: 8px !important;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
       font-weight: 500;
+      padding: 8px 12px !important;
     }
     .btn {
       border:1px solid var(--border);
       background:#fff;
       color:#111;
-      padding:10px 16px;
-      border-radius: 12px;
+      padding:10px 18px;
+      border-radius: 8px;
       cursor:pointer;
-      font-weight: 500;
+      font-weight: 600;
       transition: all 0.2s;
+      font-size: 14px;
     }
     .btn:hover {
-      background: var(--panel);
+      background: var(--brand);
+      color: white;
       transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .btn:disabled {
-      opacity:.5;
-      cursor:not-allowed;
+      box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+      border-color: var(--brand);
     }
     .actions {
       display:flex;
@@ -158,54 +160,47 @@
     }
     .muted {
       color: var(--muted);
-      font-weight: 500;
-    }
-    pre#error {
-      background:#fee2e2;
-      color:#991b1b;
-      padding:12px;
-      border-radius:12px;
-      display:none;
-      white-space:pre-wrap;
-      border-left: 4px solid #ef4444;
+      font-weight: 600;
+      font-size: 14px;
     }
     .status {
       font-size:13px;
       color:#6b7280;
       background: rgba(107, 114, 128, 0.1);
-      padding: 4px 8px;
+      padding: 6px 12px;
       border-radius: 6px;
     }
     .stats-panel {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 12px;
-      margin-top: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
     }
     .stat-card {
       background: white;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
+      border-radius: 10px;
+      padding: 16px;
       text-align: center;
     }
     .stat-number {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 700;
       color: var(--brand);
     }
     .stat-label {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--muted);
-      margin-top: 4px;
+      margin-top: 6px;
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
   <header>
     <div class="container">
-      <h1>🌍 政策活动频率地图</h1>
-      <div class="sub">拖动滑块选择时间，所有有数据的国家都会显示，当时间点有该国家数据时圆圈会变大</div>
+      <h1>🌍 Global Pension Reform Database 1952 – Present</h1>
+      <div class="sub">拖动时间轴查看养老金改革的累积效应 · 圆圈大小代表累积改革频率</div>
     </div>
   </header>
   <main>
@@ -213,13 +208,13 @@
       <div class="panel">
         <div class="controls">
           <div class="slider-wrap">
-            <span class="muted">时间</span>
+            <span class="muted">时间轴</span>
             <input id="dateSlider" type="range" min="0" max="100" step="1" value="0" />
             <span id="dateBadge" class="date-badge">Jan 1952</span>
             <span id="status" class="status">加载中...</span>
           </div>
           <div class="actions">
-            <button id="dlDataBtn" class="btn">📥 下载当前数据</button>
+            <button id="dlDataBtn" class="btn">📥 下载数据</button>
             <button id="resetBtn" class="btn">🏠 重置视图</button>
           </div>
         </div>
@@ -227,34 +222,33 @@
         <div class="stats-panel">
           <div class="stat-card">
             <div id="totalCountries" class="stat-number">-</div>
-            <div class="stat-label">活跃国家</div>
+            <div class="stat-label">活跃国家数</div>
           </div>
           <div class="stat-card">
             <div id="totalEvents" class="stat-number">-</div>
-            <div class="stat-label">当前事件</div>
+            <div class="stat-label">累积改革次数</div>
           </div>
           <div class="stat-card">
             <div id="avgFrequency" class="stat-number">-</div>
-            <div class="stat-label">平均频率</div>
+            <div class="stat-label">平均改革频率</div>
           </div>
           <div class="stat-card">
             <div id="maxFrequency" class="stat-number">-</div>
-            <div class="stat-label">最高频率</div>
+            <div class="stat-label">最高改革频率</div>
           </div>
         </div>
       </div>
 
       <div id="map"></div>
       <div class="legend">
-        💡 <strong>使用说明：</strong> 默认显示所有有数据的国家（小圆圈）。滑动时间轴时，如果当前时间点有该国家的数据，圆圈会变大；没有数据时保持小圆圈。颜色从浅橙色到深红色表示频率从低到高。
+        💡 <strong>使用说明：</strong> 圆圈大小表示该国家从1952年至当前时间点的<strong>累积养老金改革频率</strong>。随着时间推进，圆圈只会出现或变大，不会消失或缩小。颜色从浅蓝到深蓝表示改革频率从低到高。
       </div>
-      <pre id="error"></pre>
     </div>
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
-  // 嵌入的数据（这里用你的完整数据替换）
+  // 嵌入的数据（请替换为你的完整数据）
 const ROWS = [
     {Country: "Afghanistan", "ISO-3": "AFG", Status: "legislation", Date: "Mar-07", Year: 2007, Frequency: 1},
     {Country: "Afghanistan", "ISO-3": "AFG", Status: "legislation", Date: "Jul-13", Year: 2013, Frequency: 2},
@@ -4311,7 +4305,7 @@ const ROWS = [
     {Country: "Zambia", "ISO-3": "ZMB", Status: "legislation", Date: "Apr-23", Year: 2023, Frequency: 1}
 ];
 
-  // 完整的国家坐标数据库（覆盖你数据中的所有142个国家）
+  // 完整的国家坐标数据库
   const COUNTRY_CENTROIDS = {
     'Afghanistan': [33.93911, 67.709953],
     'Albania': [41.153332, 20.168331],
@@ -4479,18 +4473,10 @@ const ROWS = [
   let allDates = [];
   let selectedDateIndex = 0;
   let map, markersLayer;
-  let allCountries = new Set(); // 所有出现过的国家
-  let dataByDate = new Map(); // 按日期组织的数据
-  let globalMaxFrequency = 0; // 全局最大频率
+  let cumulativeByDate = new Map(); // 按日期累积的数据
+  let globalMaxCumulative = 0; // 全局最大累积频率
 
-  const errBox = document.getElementById('error');
   const statusEl = document.getElementById('status');
-
-  function showError(e) {
-    errBox.style.display = 'block';
-    errBox.textContent = String(e && e.stack ? e.stack : e);
-    console.error(e);
-  }
 
   // 日期解析函数
   function parseDate(dateStr) {
@@ -4507,7 +4493,6 @@ const ROWS = [
     const month = months[parts[0]];
     let year = parseInt(parts[1]);
 
-    // 处理两位年份
     if (year < 50) {
       year += 2000;
     } else if (year < 100) {
@@ -4549,12 +4534,10 @@ const ROWS = [
   function findCountryCoords(countryName) {
     if (!countryName) return null;
 
-    // 直接匹配
     if (COUNTRY_CENTROIDS[countryName]) {
       return COUNTRY_CENTROIDS[countryName];
     }
 
-    // 规范化匹配
     const canonical = canon(countryName);
     for (const [key, coords] of Object.entries(COUNTRY_CENTROIDS)) {
       if (canon(key) === canonical) {
@@ -4562,7 +4545,6 @@ const ROWS = [
       }
     }
 
-    // 别名匹配
     const alias = NAME_ALIASES.get(canonical);
     if (alias && COUNTRY_CENTROIDS[alias]) {
       return COUNTRY_CENTROIDS[alias];
@@ -4571,10 +4553,11 @@ const ROWS = [
     return null;
   }
 
-  function buildDateIndex(rows) {
+  function buildCumulativeIndex(rows) {
     const clean = (rows || []).filter(r => r.Country && r.Date && r.Frequency);
 
-    // 收集所有国家和日期
+    // 按日期和国家收集数据
+    const dataByDate = new Map();
     const dateSet = new Set();
 
     clean.forEach(row => {
@@ -4585,15 +4568,13 @@ const ROWS = [
       const countryName = String(row.Country).trim();
       const frequency = +row.Frequency;
 
-      allCountries.add(countryName);
       dateSet.add(dateKey);
-      globalMaxFrequency = Math.max(globalMaxFrequency, frequency);
 
       if (!dataByDate.has(dateKey)) {
         dataByDate.set(dateKey, new Map());
       }
 
-      // 对于同一日期同一国家，取最大频率
+      // 对于同一时间点同一国家，取最大值
       const existing = dataByDate.get(dateKey).get(countryName) || 0;
       dataByDate.get(dateKey).set(countryName, Math.max(existing, frequency));
     });
@@ -4601,9 +4582,28 @@ const ROWS = [
     // 按时间排序
     allDates = Array.from(dateSet).sort((a, b) => a - b);
 
+    // 构建每个时间点的"已出现国家"状态（保持最新的Frequency值）
+    const cumulativeCountries = new Map();
+
+    allDates.forEach(dateKey => {
+      const currentData = dataByDate.get(dateKey) || new Map();
+
+      // 更新出现过的国家的Frequency值
+      currentData.forEach((freq, country) => {
+        cumulativeCountries.set(country, freq);
+      });
+
+      // 保存当前时间点的状态（所有已出现国家及其最新Frequency）
+      cumulativeByDate.set(dateKey, new Map(cumulativeCountries));
+
+      // 更新全局最大值
+      cumulativeCountries.forEach(freq => {
+        globalMaxCumulative = Math.max(globalMaxCumulative, freq);
+      });
+    });
+
     // 设置滑块
     const slider = document.getElementById('dateSlider');
-
     selectedDateIndex = 0;
     slider.min = 0;
     slider.max = Math.max(0, allDates.length - 1);
@@ -4626,24 +4626,26 @@ const ROWS = [
   function updateStats() {
     if (allDates.length === 0) return;
 
-    const currentData = dataByDate.get(allDates[selectedDateIndex]) || new Map();
+    const currentData = cumulativeByDate.get(allDates[selectedDateIndex]) || new Map();
     const frequencies = Array.from(currentData.values());
+    const totalFreq = frequencies.reduce((a, b) => a + b, 0);
 
     document.getElementById('totalCountries').textContent = currentData.size;
-    document.getElementById('totalEvents').textContent = frequencies.length;
+    document.getElementById('totalEvents').textContent = totalFreq;
     document.getElementById('avgFrequency').textContent =
-      frequencies.length > 0 ? Math.round(frequencies.reduce((a,b) => a+b, 0) / frequencies.length) : 0;
+      frequencies.length > 0 ? (totalFreq / frequencies.length).toFixed(1) : 0;
     document.getElementById('maxFrequency').textContent =
       frequencies.length > 0 ? Math.max(...frequencies) : 0;
   }
 
-  // 构建日期索引
+  // 构建累积索引
   (function initData() {
     try {
-      buildDateIndex(ROWS);
-      statusEl.textContent = `数据已加载 (${ROWS.length} 条记录, ${allCountries.size} 个国家, ${allDates.length} 个时间点)`;
+      buildCumulativeIndex(ROWS);
+      statusEl.textContent = `数据已加载 (${ROWS.length} 条记录, ${allDates.length} 个时间点)`;
     } catch(e) {
-      showError(e);
+      console.error(e);
+      statusEl.textContent = '数据加载失败';
     }
   })();
 
@@ -4651,24 +4653,21 @@ const ROWS = [
 
   function initMap() {
     try {
-      // 创建地图
       map = L.map('map', { worldCopyJump: true });
 
-      // 使用OpenStreetMap瓦片
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 10,
         minZoom: 2,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       }).addTo(map);
 
       map.setView([20, 0], 2);
       markersLayer = L.layerGroup().addTo(map);
 
-      // 渲染气泡
       renderBubbles();
 
     } catch(e) {
-      showError(e);
+      console.error(e);
       statusEl.textContent = '地图初始化失败';
     }
   }
@@ -4679,15 +4678,11 @@ const ROWS = [
 
     if (allDates.length === 0) return;
 
-    const currentData = dataByDate.get(allDates[selectedDateIndex]) || new Map();
+    const currentData = cumulativeByDate.get(allDates[selectedDateIndex]) || new Map();
     const unmatched = [];
     let placed = 0;
 
-    // 获取当前时间点的最大频率（用于当前时间点的相对比例）
-    const currentMaxFreq = currentData.size > 0 ? Math.max(...Array.from(currentData.values())) : 1;
-
-    // 遍历所有曾经出现过的国家
-    allCountries.forEach(countryName => {
+    currentData.forEach((cumulativeFreq, countryName) => {
       const coords = findCountryCoords(countryName);
 
       if (!coords) {
@@ -4695,57 +4690,43 @@ const ROWS = [
         return;
       }
 
-      const frequency = currentData.get(countryName) || 0;
-      const hasDataAtCurrentTime = frequency > 0;
+      // 基于全局最大累积频率计算圆圈大小
+      const normalizedFreq = globalMaxCumulative > 0 ? cumulativeFreq / globalMaxCumulative : 0;
+      const minRadius = 8;
+      const maxRadius = 40;
+      const radius = minRadius + (normalizedFreq * (maxRadius - minRadius));
 
-      // 基础大小（所有国家都有）
-      const baseRadius = 6;
-      // 如果当前时间点有数据，根据频率计算额外大小
-      let radius = baseRadius;
-      let fillColor = '#e5e7eb'; // 默认灰色
-      let opacity = 0.5; // 默认透明度
-
-      if (hasDataAtCurrentTime) {
-        // 当前时间点有数据：计算相对大小和颜色
-        const normalizedFreq = currentMaxFreq > 0 ? frequency / currentMaxFreq : 0;
-        const extraRadius = normalizedFreq * 20; // 最大额外20px
-        radius = baseRadius + extraRadius;
-
-        // 颜色渐变：基于全局最大频率的比例
-        const globalNormalizedFreq = globalMaxFrequency > 0 ? frequency / globalMaxFrequency : 0;
-        const colors = [
-          '#fff7ed', '#ffedd5', '#fed7aa', '#fdba74',
-          '#fb923c', '#f97316', '#ea580c', '#c2410c', '#9a3412'
-        ];
-        const colorIndex = Math.floor(globalNormalizedFreq * (colors.length - 1));
-        fillColor = colors[colorIndex];
-        opacity = 0.8;
-      }
+      // 颜色渐变：从浅蓝到深蓝
+      const colors = [
+        '#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa',
+        '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a'
+      ];
+      const colorIndex = Math.min(
+        Math.floor(normalizedFreq * colors.length),
+        colors.length - 1
+      );
+      const fillColor = colors[colorIndex];
 
       const circle = L.circleMarker(coords, {
         radius: radius,
         weight: 2,
-        color: hasDataAtCurrentTime ? '#c2410c' : '#9ca3af',
+        color: '#1e40af',
         fillColor: fillColor,
-        fillOpacity: opacity,
+        fillOpacity: 0.7,
         opacity: 1
       }).bindTooltip(
-        `<div style="text-align: center; padding: 4px;">
-          <div style="font-weight: bold; font-size: 14px; color: #111;">${countryName}</div>
-          <div style="color: #666; font-size: 12px; margin-top: 2px;">
-            ${hasDataAtCurrentTime
-              ? `政策频率: <span style="color: #ea580c; font-weight: bold;">${frequency}</span>`
-              : `<span style="color: #999;">当前时间点无数据</span>`
-            }
+        `<div style="text-align: center; padding: 6px;">
+          <div style="font-weight: bold; font-size: 15px; color: #111;">${countryName}</div>
+          <div style="color: #3b82f6; font-size: 14px; margin-top: 4px; font-weight: 700;">
+            累积改革频率: ${cumulativeFreq}
           </div>
-          <div style="color: #999; font-size: 11px;">
-            ${document.getElementById('dateBadge').textContent}
+          <div style="color: #999; font-size: 12px; margin-top: 2px;">
+            截至 ${document.getElementById('dateBadge').textContent}
           </div>
         </div>`,
         {
           permanent: false,
-          direction: 'top',
-          className: 'custom-tooltip'
+          direction: 'top'
         }
       );
 
@@ -4753,7 +4734,7 @@ const ROWS = [
       placed++;
     });
 
-    statusEl.textContent = `显示: ${placed} 个国家 (${currentData.size} 个有当前数据)  ·  未匹配: ${unmatched.length} 个`;
+    statusEl.textContent = `显示: ${placed} 个国家  ·  未匹配: ${unmatched.length}`;
     if (unmatched.length) {
       console.warn('未找到坐标的国家:', unmatched);
     }
@@ -4774,19 +4755,19 @@ const ROWS = [
   document.getElementById('dlDataBtn').addEventListener('click', () => {
     if (allDates.length === 0) return;
 
-    const currentData = dataByDate.get(allDates[selectedDateIndex]) || new Map();
+    const currentData = cumulativeByDate.get(allDates[selectedDateIndex]) || new Map();
     const currentDate = new Date(allDates[selectedDateIndex]);
-    const dateStr = currentDate.toISOString().slice(0, 7); // YYYY-MM format
+    const dateStr = currentDate.toISOString().slice(0, 7);
 
     const rows = Array.from(currentData.entries()).map(([country, freq]) =>
       `${country},${dateStr},${freq}`
     );
-    const csv = 'Country,Date,Frequency\n' + rows.join('\n');
+    const csv = 'Country,Date,CumulativeFrequency\n' + rows.join('\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `policy-data_${dateStr}.csv`;
+    a.download = `pension-reform-cumulative_${dateStr}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   });
